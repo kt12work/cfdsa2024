@@ -13,9 +13,17 @@ COPY templates templates
 # You can skip this step if you don't have any dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 3000
+ENV PORT=5000
+ENV INSTANCE_NAME=""
+ENV INSTANCE_HASH=""
+
+EXPOSE ${PORT}
 
 # Command to run your application (replace with your script or entry point)
 #CMD ["python3", "main.py"]
 #ENTRYPOINT ["python", "main.py"]
 ENTRYPOINT python main.py
+CMD []
+
+# docker build -t dockerhubaccount/python:v1.1 .
+# docker container run -d -e PORT=5000 -e INSTANCE_NAME=INSTANCE_NAME -e INSTANCE_HASH=HASH -p 5000:5000 dockerhubaccount/python:v1.1
