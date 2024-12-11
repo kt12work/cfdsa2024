@@ -1,0 +1,6 @@
+kubectl apply -f config.yml
+kubectl apply -f bggdb.yml
+kubectl apply -f bggapp.yml
+kubectl port-forward svc/bggapp-svc -n bggns 8080:8080
+
+kubectl delete namespace bggns # cleanup
