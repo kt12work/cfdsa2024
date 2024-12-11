@@ -13,9 +13,9 @@ COPY templates templates
 # You can skip this step if you don't have any dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose port 5000 (or any port your app uses, for example, Flask)
 EXPOSE 3000
 
 # Command to run your application (replace with your script or entry point)
 #CMD ["python3", "main.py"]
-ENTRYPOINT ["python", "main.py"]
+#ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT python main.py

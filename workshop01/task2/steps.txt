@@ -1,0 +1,19 @@
+stackupiss/northwind-app:v1
+stackupiss/northwind-db:v1
+
+docker create network \
+-d bridge app-net
+docker create volume data
+docker run –d \
+--network app-net \
+--name db northwind-db:v1 \
+
+docker run –d –p 8080:3000 \
+-v data:/app/public \
+--network app-net \
+--name app nortwind-app:v1
+
+docker network create mynet
+docker volume create myvol
+docker run --net mynet -v myvol:/var/lib/mysql stackupiss/northwind-db:v1
+docker run --net mynet -e DB_HOST=appdb -e DB_USER=root -e DB_PASSWORD=changeit -p 8080:3000 stackupiss/northwind-app:v1

@@ -1,0 +1,140 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: codeserver
+  labels:
+    app: cs
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cs-cm
+  namespace: codeserver
+  labels:
+    app: cs
+data:
+  TZ: Asia/Singapore
+  DEFAULT_WORKSPACE: /config/workspace
+  PROXY_DOMAIN: codeserver-146.190.202.36.nip.io
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cs-secret
+  namespace: codeserver
+  labels:
+    app: cs
+data:
+  PASSWORD: cGFzc3dvcmQ=  # base64 encoded value of 'password'
+  SUDO_PASSWORD: cGFzc3dvcmQ= # base64 encoded value of 'password'
+
+--- 
+apiVersion: v1 
+kind: PersistentVolumeClaim 
+metadata:
+  name: codeserver-pvc 
+  namespace: codeserver 
+spec: 
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: do-block-storage # do-block-storage
+
+---
+apiVersion: apps/v1
+kind: Deployment  
+metadata: 
+  name: cs-deploy
+  namespace: codeserver 
+  labels:
+    app: cs
+    name: cs-deploy
+spec: 
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: cs
+      name: cs-po 
+  template: 
+    metadata:
+      name: cs-po
+      namespace: codeserver
+      labels:
+        app: cs 
+        name: cs-po 
+    spec:
+      volumes:
+      - name: workspace-vol
+        persistentVolumeClaim:
+          claimName: codeserver-pvc
+      containers: 
+      - name: cs-container
+        image: linuxserver/code-server:amd64-4.95.3
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: cs-cm
+        - secretRef:
+            name: cs-secret
+        ports:
+        - name: cs-port
+          containerPort: 8443
+        volumeMounts:
+        - name: workspace-vol 
+          mountPath: /config/workspace
+        resources:
+          requests:
+            memory: 512M
+            cpu: 200m
+          limits:
+            memory: 512M
+            cpu: 200m
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cs-svc
+  namespace: codeserver
+  labels:
+    app: cs
+    name: cs-svc
+spec:
+  type: ClusterIP
+  # type: NodePort
+  # type: LoadBalancer
+  selector:
+    app: cs
+    name: cs-po
+  ports:
+  - name: svc-cs-port
+    port: 8443
+    targetPort: 8443
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cs-ing
+  namespace: codeserver
+  labels:
+    app: cs
+    name: cs-ing
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: codeserver-146.190.202.36.nip.io
+    http:
+      paths:
+      - path: / 
+        pathType: Prefix
+        backend:
+          service:
+            name: cs-svc
+            port: 
+              number: 8443
